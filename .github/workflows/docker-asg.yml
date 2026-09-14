@@ -47,7 +47,7 @@ jobs:
           --document-name "AWS-RunShellScript" \
           --parameters "commands=[
             \"aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 925047940866.dkr.ecr.ap-southeast-2.amazonaws.com/nginx:latest\",
-            \"sudo docker pull yjunho/nginx:1.31.3-cd\",
+            \"sudo docker pull 925047940866.dkr.ecr.ap-southeast-2.amazonaws.com/nginx:latest\",
             \"sudo docker stop nginx-container || true\",
             \"sudo docker rm nginx-container || true\",
             \"sudo docker run -d --name nginx-container -p 80:80 925047940866.dkr.ecr.ap-southeast-2.amazonaws.com/nginx:latest\"
