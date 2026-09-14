@@ -40,16 +40,17 @@ jobs:
         docker push 925047940866.dkr.ecr.ap-southeast-2.amazonaws.com/nginx:1.31.3-ecr
         docker push 925047940866.dkr.ecr.ap-southeast-2.amazonaws.com/nginx:latest
 
-    # - name: 컨테이너 배포 및 S3 파일 싱크
-    #   run: |
-    #     aws ssm send-command \
-    #       --instance-ids "i-098c52d8121bddab5" \
-    #       --document-name "AWS-RunShellScript" \
-    #       --parameters "commands=[
-    #         \"sudo docker pull yjunho/nginx:1.31.3-cd\",
-    #         \"sudo docker stop nginx-container || true\",
-    #         \"sudo docker rm nginx-container || true\",
-    #         \"sudo docker run -d --name nginx-container -p 80:80 yjunho/nginx:1.31.3-cd\"
-    #       ]" \
-    #       --region ${{secrets.AWS_REGION}} \
-    #       --comment "Deploying SSM docker"
+    - name: 컨테이너 배포 및 S3 파일 싱크
+      run: |
+        aws ssm send-command \
+          --instance-ids "i-098c52d8121bddab5" \
+          --document-name "AWS-RunShellScript" \
+          --parameters "commands=[
+            \"aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 925047940866.dkr.ecr.ap-southeast-2.amazonaws.com/nginx:latest\",
+            \"sudo docker pull yjunho/nginx:1.31.3-cd\",
+            \"sudo docker stop nginx-container || true\",
+            \"sudo docker rm nginx-container || true\",
+            \"sudo docker run -d --name nginx-container -p 80:80 925047940866.dkr.ecr.ap-southeast-2.amazonaws.com/nginx:latest\"
+          ]" \
+          --region ${{secrets.AWS_REGION}} \
+          --comment "Deploying SSM docker"
