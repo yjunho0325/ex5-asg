@@ -24,7 +24,7 @@ jobs:
         aws-region: ${{secrets.AWS_REGION}}
 
     - name: Docker Compose File Upload to S3
-      run:
+      run: |
         aws s3 cp ./docker-compose.yaml s3://std08-v1-bucket/docker-compose.yaml
         aws s3 sync ./nginx/html/ s3://std08-v1-bucket/nginx-html/ --delete
         aws s3 sync ./fastapi/app/ s3://std08-v1-bucket/fastapi-app/ --delete
