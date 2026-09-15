@@ -26,8 +26,8 @@ jobs:
     - name: Docker Compose File Upload to S3
       run: |
         aws s3 cp ./docker-compose.yaml s3://std08-v1-bucket/docker-compose.yaml
-        aws s3 sync ./nginx/html/ s3://std08-v1-bucket/nginx-html/ --delete
-        aws s3 sync ./fastapi/app/ s3://std08-v1-bucket/fastapi-app/ --delete
+        aws s3 sync ./nginx/html/ s3://std08-v1-bucket/nginx/html/ --delete
+        aws s3 sync ./fastapi/app/ s3://std08-v1-bucket/fastapi/app/ --delete
 
     # ECR에 Docker 이미지 빌드 및 푸시
     - name: Login to Amazon ECR
@@ -61,8 +61,8 @@ jobs:
             \"sudo docker rm nginx-container fastapi-container || true\",
             \"sudo mkdir -p /home/ec2-user/nginx/html /home/ec2-user/fastapi/app\",
             \"sudo chown -R ec2-user:ec2-user /home/ec2-user/nginx /home/ec2-user/fastapi\",
-            \"sudo aws s3 sync s3://std08-v1-bucket/nginx-html /home/ec2-user/nginx/html/ --delete\",
-            \"sudo aws s3 sync s3://std08-v1-bucket/fastapi-app /home/ec2-user/fastapi/app/ --delete\",
+            \"sudo aws s3 sync s3://std08-v1-bucket/nginx/html /home/ec2-user/nginx/html/ --delete\",
+            \"sudo aws s3 sync s3://std08-v1-bucket/fastapi/app /home/ec2-user/fastapi/app/ --delete\",
             \"sudo aws s3 cp s3://std08-v1-bucket/docker-compose.yaml /home/ec2-user/docker-compose.yaml\",
             \"cd /home/ec2-user && sudo docker compose pull\",
             \"cd /home/ec2-user && sudo docker compose up -d --remove-orphans\",
