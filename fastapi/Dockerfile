@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 4. app 디렉토리 전체를 컨테이너의 /code/app으로 복사
-COPY ./app /app
+COPY ./app/ .
 
 # 5. FastAPI 실행 (포트 8000)
 # 주의: app 디렉토리 안에 main.py가 있으므로 'app.main:app' 형식을 사용합니다.
