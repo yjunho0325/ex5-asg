@@ -2,8 +2,7 @@
 name: GitOps DOCKER-ASG CICD Pipeline
 on:
   push:
-    branches:
-    - main
+    branches: ["main"]
 jobs:
   build-and-update:
     runs-on: ubuntu-latest
@@ -27,6 +26,8 @@ jobs:
     - name: Docker Compose File Upload to S3
       run:
         aws s3 cp ./docker-compose.yaml s3://std08-v1-bucket/docker-compose.yaml
+        aws s3 sync ./nginx/html/ s3://std08-v1-bucket/nginx-html/ --delete
+        aws s3 sync ./fastapi/app/ s3://std08-v1-bucket/fastapi-app/ --delete
 
     # ECR에 Docker 이미지 빌드 및 푸시
     - name: Login to Amazon ECR
@@ -44,18 +45,27 @@ jobs:
         docker push 925047940866.dkr.ecr.ap-southeast-2.amazonaws.com/nginx:1.31.3-ecr
         docker push 925047940866.dkr.ecr.ap-southeast-2.amazonaws.com/nginx:latest
 
+        docker build --no-cache -t 925047940866.dkr.ecr.ap-southeast-2.amazonaws.com/fastapi:v1-ecr ./fastapi
+        docker build --no-cache -t 925047940866.dkr.ecr.ap-southeast-2.amazonaws.com/fastapi:latest ./fastapi
+        docker push 925047940866.dkr.ecr.ap-southeast-2.amazonaws.com/fastapi:v1-ecr
+        docker push 925047940866.dkr.ecr.ap-southeast-2.amazonaws.com/fastapi:latest
+
     - name: Docker Compose Deploying
       run: |
         aws ssm send-command \
           --document-name "AWS-RunShellScript" \
           --targets "Key=tag:Cicd,Values=asg" \
           --parameters "commands=[
-            \"aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 925047940866.dkr.ecr.ap-southeast-2.amazonaws.com/nginx:latest\",
-            \"sudo docker stop nginx-container || true\",
-            \"sudo docker rm nginx-container || true\",
-            \"sudo aws s3 cp s3://std08-v1-bucket/docker-compose.yaml ./docker-compose.yaml\",
-            \"sudo docker compose pull\",
-            \"sudo docker compose up -d --remove-orphans\",
+            \"sudo aws ecr get-login-password --region ap-southeast-2 | sudo docker login --username AWS --password-stdin 925047940866.dkr.ecr.ap-southeast-2.amazonaws.com\",
+            \"sudo docker stop nginx-container fastapi-container || true\",
+            \"sudo docker rm nginx-container fastapi-container || true\",
+            \"sudo mkdir -p /home/ec2-user/nginx/html /home/ec2-user/fastapi/app\",
+            \"sudo chown -R ec2-user:ec2-user /home/ec2-user/nginx /home/ec2-user/fastapi\",
+            \"sudo aws s3 sync s3://std08-v1-bucket/nginx-html /home/ec2-user/nginx/html/ --delete\",
+            \"sudo aws s3 sync s3://std08-v1-bucket/fastapi-app /home/ec2-user/fastapi/app/ --delete\",
+            \"sudo aws s3 cp s3://std08-v1-bucket/docker-compose.yaml /home/ec2-user/docker-compose.yaml\",
+            \"cd /home/ec2-user && sudo docker compose pull\",
+            \"cd /home/ec2-user && sudo docker compose up -d --remove-orphans\",
             \"sudo docker image prune -f\"
           ]" \
           --region ${{secrets.AWS_REGION}} \
